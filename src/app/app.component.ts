@@ -16,15 +16,15 @@ export class AppComponent implements OnInit {
   seasonsBounds: number[];
   selectedSeason: number;
 
-  svg;
+  svg: d3.Selection;
   width: number;
   height: number;
-  y;
-  yAxis;
-  line;
-  area;
-  lineGraph;
-  areaGraph;
+  y: d3.scale;
+  yAxis: d3.axis;
+  line: d3.line;
+  area: d3.area;
+  lineGraph: d3.Selection;
+  areaGraph: d3.Selection;
 
   constructor(private appService: AppService) {
   }
