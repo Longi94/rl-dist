@@ -13,67 +13,124 @@ export class AppComponent implements OnInit {
 
   dists: Distributions;
 
+  seasonsBounds: number[];
+  selectedSeason: number;
+
+  svg;
+  width: number;
+  height: number;
+  y;
+  yAxis;
+  line;
+  area;
+  lineGraph;
+  areaGraph;
+
   constructor(private appService: AppService) {
   }
 
   ngOnInit(): void {
     this.appService.getDistributions().subscribe(dists => {
       this.dists = dists;
+
+      const seasons = Object.keys(this.dists).map(s => parseInt(s));
+      seasons.sort((a, b) => a - b);
+      this.seasonsBounds = [seasons[0], seasons[seasons.length - 1]];
+      this.selectedSeason = this.seasonsBounds[1];
+
       this.initD3();
     });
   }
 
   private initD3() {
-    const margin = {top: 10, right: 30, bottom: 30, left: 60},
-      width = 600 - margin.left - margin.right,
-      height = 400 - margin.top - margin.bottom;
+    const margin = {top: 10, right: 30, bottom: 30, left: 60};
+    this.width = 600 - margin.left - margin.right;
+    this.height = 400 - margin.top - margin.bottom;
 
-    const svg = d3.select('#chart')
+    this.svg = d3.select('#chart')
       .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      .attr('width', this.width + margin.left + margin.right)
+      .attr('height', this.height + margin.top + margin.bottom)
       .append('g')
       .attr('transform',
         'translate(' + margin.left + ',' + margin.top + ')');
 
     const x = d3.scaleBand()
       .domain(TIERS)
-      .range([0, width]);
+      .range([0, this.width]);
 
-    svg.append('g')
-      .attr('transform', 'translate(0,' + height + ')')
+    this.svg.append('g')
+      .attr('transform', 'translate(0,' + this.height + ')')
       .call(d3.axisBottom(x));
 
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(this.dists[12]['Solo Duel'])])
-      .range([height, 0]);
+    this.y = d3.scaleLinear()
+      .domain([0, d3.max(this.dists[this.selectedSeason]['Solo Duel'])])
+      .range([this.height, 0]);
 
-    svg.append('g')
-      .call(d3.axisLeft(y));
+    this.yAxis = d3.axisLeft(this.y);
+    this.svg.append('g')
+      .attr('class', 'y-axis')
+      .call(this.yAxis);
 
     const xCoord = (d, i) => x(TIERS[i]) + x.step() / 2;
-    const yCoord = d => y(d);
+    const yCoord = d => this.y(d);
 
-    const area = d3.area()
+    this.area = d3.area()
       .curve(d3.curveLinear)
       .x(xCoord)
-      .y0(y(0))
+      .y0(this.y(0))
       .y1(yCoord);
+    this.line = d3.line()
+      .x(xCoord)
+      .y(yCoord);
 
-    svg.append('path')
-      .datum(this.dists[12]['Solo Duel'])
+    const season = this.dists[this.selectedSeason]['Solo Duel'];
+
+    this.areaGraph = this.svg.append('path')
+      .datum(season)
       .attr('fill', 'steelblue')
       .attr('opacity', '0.3 ')
-      .attr('d', area);
+      .attr('d', this.area);
 
-    svg.append('path')
-      .datum(this.dists[12]['Solo Duel'])
+    this.lineGraph = this.svg.append('path')
+      .datum(season)
       .attr('fill', 'none')
       .attr('stroke', 'steelblue')
       .attr('stroke-width', 1)
-      .attr('d', d3.line()
-        .x(xCoord)
-        .y(yCoord)
-      );
+      .attr('d', this.area);
   }
+
+  previousSeason() {
+    this.selectedSeason = Math.max(this.seasonsBounds[0], this.selectedSeason - 1);
+    this.update();
+  }
+
+  nextSeason() {
+    this.selectedSeason = Math.min(this.seasonsBounds[1], this.selectedSeason + 1);
+    this.update();
+  }
+
+  update() {
+    const season = this.dists[this.selectedSeason]['Solo Duel'];
+
+    this.y.domain([0, d3.max(season)])
+      .range([this.height, 0]);
+
+    this.svg.selectAll('.y-axis').transition()
+      .duration(1000)
+      .call(this.yAxis);
+
+    this.areaGraph
+      .datum(season)
+      .transition()
+      .duration(1000)
+      .attr('d', this.area);
+
+    this.lineGraph
+      .datum(season)
+      .transition()
+      .duration(1000)
+      .attr('d', this.line);
+  }
+
 }

@@ -1,1 +1,6 @@
 <div id="chart"></div>
+<div class="season-control-container">
+  <button mat-icon-button (click)="previousSeason()"><mat-icon>chevron_left</mat-icon></button>
+  <span>Season {{selectedSeason}}</span>
+  <button mat-icon-button (click)="nextSeason()"><mat-icon>chevron_right</mat-icon></button>
+</div>
