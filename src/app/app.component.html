@@ -1,7 +1,11 @@
-<div id="chart"></div>
-<div class="playlist-container">
-  <mat-checkbox *ngFor="let p of playlistsNames" [(ngModel)]="playlists[p].visible"
-                (ngModelChange)="update()">{{p}}</mat-checkbox>
+<div class="chart-and-playlists">
+  <div id="chart"></div>
+  <div class="playlist-container">
+    <div *ngFor="let p of playlistsNames" class="legend-label">
+      <div class="legend-color" [ngStyle]="{'background-color': playlists[p].color}"></div>
+      <mat-checkbox [(ngModel)]="playlists[p].visible" (ngModelChange)="update()">{{p}}</mat-checkbox>
+    </div>
+  </div>
 </div>
 <div class="season-control-container">
   <button mat-icon-button (click)="previousSeason()">
