@@ -4,6 +4,16 @@ import * as d3 from 'd3';
 
 const TIERS = ['B1', 'B2', 'B3', 'S1', 'S2', 'S3', 'G1', 'G2', 'G3', 'P1', 'P2', 'P3', 'D1', 'D2', 'D3', 'C1', 'C2', 'C3', 'GC'];
 
+class PlaylistPlot {
+  visible: boolean;
+  color: string;
+
+  line?: d3.line;
+  area?: d3.area;
+  lineGraph?: d3.Selection;
+  areaGraph?: d3.Selection;
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -12,6 +22,17 @@ const TIERS = ['B1', 'B2', 'B3', 'S1', 'S2', 'S3', 'G1', 'G2', 'G3', 'P1', 'P2',
 export class AppComponent implements OnInit {
 
   dists: Distributions;
+  playlists: { [p: string]: PlaylistPlot } = {
+    'Standard': {visible: true, color: '#396ab1'},
+    'Doubles': {visible: true, color: '#DA7C30'},
+    'Solo Duel': {visible: true, color: '#3E9651'},
+    'Solo Standard': {visible: true, color: '#CC2529'},
+    'Rumble': {visible: false, color: '#535154'},
+    'Dropshot': {visible: false, color: '#6B4C9A'},
+    'Hoops': {visible: false, color: '#922428'},
+    'Snow Day': {visible: false, color: '#948B3D'},
+  };
+  playlistsNames = Object.keys(this.playlists);
 
   seasonsBounds: number[];
   selectedSeason: number;
@@ -21,10 +42,6 @@ export class AppComponent implements OnInit {
   height: number;
   y: d3.scale;
   yAxis: d3.axis;
-  line: d3.line;
-  area: d3.area;
-  lineGraph: d3.Selection;
-  areaGraph: d3.Selection;
 
   constructor(private appService: AppService) {
   }
@@ -64,7 +81,7 @@ export class AppComponent implements OnInit {
       .call(d3.axisBottom(x));
 
     this.y = d3.scaleLinear()
-      .domain([0, d3.max(this.dists[this.selectedSeason]['Solo Duel'])])
+      .domain([0, this.getMax()])
       .range([this.height, 0]);
 
     this.yAxis = d3.axisLeft(this.y);
@@ -72,65 +89,97 @@ export class AppComponent implements OnInit {
       .attr('class', 'y-axis')
       .call(this.yAxis);
 
-    const xCoord = (d, i) => x(TIERS[i]) + x.step() / 2;
-    const yCoord = d => this.y(d);
+    for (const p in this.playlists) {
+      const pp = this.playlists[p];
 
-    this.area = d3.area()
-      .curve(d3.curveLinear)
-      .x(xCoord)
-      .y0(this.y(0))
-      .y1(yCoord);
-    this.line = d3.line()
-      .x(xCoord)
-      .y(yCoord);
+      const xCoord = (d, i) => x(TIERS[i]) + x.step() / 2;
+      const yCoord = d => this.y(d);
 
-    const season = this.dists[this.selectedSeason]['Solo Duel'];
+      pp.area = d3.area()
+        .curve(d3.curveLinear)
+        .x(xCoord)
+        .y0(this.y(0))
+        .y1(yCoord);
+      pp.line = d3.line()
+        .x(xCoord)
+        .y(yCoord);
 
-    this.areaGraph = this.svg.append('path')
-      .datum(season)
-      .attr('fill', 'steelblue')
-      .attr('opacity', '0.3 ')
-      .attr('d', this.area);
+      const season = this.dists[this.selectedSeason][p];
 
-    this.lineGraph = this.svg.append('path')
-      .datum(season)
-      .attr('fill', 'none')
-      .attr('stroke', 'steelblue')
-      .attr('stroke-width', 1)
-      .attr('d', this.area);
+      pp.areaGraph = this.svg.append('path')
+        .datum(season)
+        .attr('fill', pp.color)
+        .attr('opacity', pp.visible ? 0.1 : 0)
+        .attr('d', pp.area);
+
+      pp.lineGraph = this.svg.append('path')
+        .datum(season)
+        .attr('fill', 'none')
+        .attr('opacity', pp.visible ? 1 : 0)
+        .attr('stroke', pp.color)
+        .attr('stroke-width', 1)
+        .attr('d', pp.area);
+    }
+  }
+
+  getMax(): number {
+    let max = 10;
+
+    for (const p in this.playlists) {
+      if (this.playlists[p].visible && this.dists[this.selectedSeason][p] != undefined) {
+        max = d3.max([max, d3.max(this.dists[this.selectedSeason][p])]);
+      }
+    }
+
+    return max;
   }
 
   previousSeason() {
     this.selectedSeason = Math.max(this.seasonsBounds[0], this.selectedSeason - 1);
-    this.update();
+    this.update(true);
   }
 
   nextSeason() {
     this.selectedSeason = Math.min(this.seasonsBounds[1], this.selectedSeason + 1);
-    this.update();
+    this.update(true);
   }
 
-  update() {
-    const season = this.dists[this.selectedSeason]['Solo Duel'];
-
-    this.y.domain([0, d3.max(season)])
+  update(changeValues: boolean = false) {
+    this.y.domain([0, this.getMax()])
       .range([this.height, 0]);
 
+    const d = changeValues ? 1000 : 250;
+
     this.svg.selectAll('.y-axis').transition()
-      .duration(1000)
+      .duration(d)
       .call(this.yAxis);
 
-    this.areaGraph
-      .datum(season)
-      .transition()
-      .duration(1000)
-      .attr('d', this.area);
+    for (const p in this.playlists) {
+      const pp = this.playlists[p];
 
-    this.lineGraph
-      .datum(season)
-      .transition()
-      .duration(1000)
-      .attr('d', this.line);
+      const season = this.dists[this.selectedSeason][p];
+
+      let line = pp.lineGraph;
+      let area = pp.areaGraph;
+
+      if (changeValues && season != undefined) {
+        line = line.datum(season);
+        area = area.datum(season);
+      }
+
+      const lineOpacity = season != undefined && pp.visible ? 1 : 0;
+      const areaOpacity = season != undefined && pp.visible ? 0.1 : 0;
+
+      line.transition()
+        .duration(d)
+        .attr('opacity', lineOpacity)
+        .attr('d', pp.line);
+
+      area.transition()
+        .duration(d)
+        .attr('opacity', areaOpacity)
+        .attr('d', pp.area);
+    }
   }
 
 }
