@@ -26,14 +26,14 @@ export class AppComponent implements OnInit {
 
   dists: Distributions;
   playlists: { [p: string]: PlaylistPlot } = {
-    'Standard': {visible: true, color: '#396ab1'},
-    'Doubles': {visible: true, color: '#DA7C30'},
-    'Solo Duel': {visible: true, color: '#3E9651'},
-    'Solo Standard': {visible: true, color: '#CC2529'},
-    'Rumble': {visible: false, color: '#535154'},
-    'Dropshot': {visible: false, color: '#6B4C9A'},
-    'Hoops': {visible: false, color: '#922428'},
-    'Snow Day': {visible: false, color: '#948B3D'},
+    'Standard': {visible: true, color: '#7293CB'},
+    'Doubles': {visible: true, color: '#E1974C'},
+    'Solo Duel': {visible: true, color: '#84BA5B'},
+    'Solo Standard': {visible: true, color: '#D35E60'},
+    'Rumble': {visible: false, color: '#808585'},
+    'Dropshot': {visible: false, color: '#9067A7'},
+    'Hoops': {visible: false, color: '#AB6857'},
+    'Snow Day': {visible: false, color: '#CCC210'},
   };
   playlistsNames = Object.keys(this.playlists);
 
@@ -132,7 +132,7 @@ export class AppComponent implements OnInit {
         .attr('fill', 'none')
         .attr('opacity', pp.visible ? 1 : 0)
         .attr('stroke', pp.color)
-        .attr('stroke-width', 1)
+        .attr('stroke-width', 1.5)
         .attr('d', pp.line);
     }
 
