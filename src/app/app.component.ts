@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { AppService, Distributions } from './app.service';
 import * as d3 from 'd3';
 
-const TIERS = ['B1', 'B2', 'B3', 'S1', 'S2', 'S3', 'G1', 'G2', 'G3', 'P1', 'P2', 'P3', 'D1', 'D2', 'D3', 'C1', 'C2', 'C3', 'GC'];
 const MAX = 0.16;
+const LABEL_SIZE = 30;
 
 class PlaylistPlot {
   visible: boolean;
@@ -42,7 +42,12 @@ export class AppComponent implements OnInit {
   y: d3.scale;
   yAxis: d3.axis;
 
+  tiers: string[] = [];
+
   constructor(private appService: AppService) {
+    for (let i = 1; i <= 19; i++) {
+      this.tiers.push(`assets/ranks/${i}.png`);
+    }
   }
 
   ngOnInit(): void {
@@ -72,19 +77,32 @@ export class AppComponent implements OnInit {
         'translate(' + margin.left + ',' + margin.top + ')');
 
     const x = d3.scaleBand()
-      .domain(TIERS)
+      .domain(this.tiers)
       .range([0, this.width]);
 
     this.svg.append('g')
+      .attr("class", "x-axis")
       .attr('transform', 'translate(0,' + this.height + ')')
       .call(d3.axisBottom(x));
+
+    this.svg.select(".x-axis").selectAll("text").remove();
+
+    const ticks = this.svg.select(".x-axis").selectAll(".tick")
+      .data(this.tiers)
+      .append("svg:image")
+      .attr("xlink:href", d => d)
+      .attr("width", LABEL_SIZE)
+      .attr("height", LABEL_SIZE)
+      .attr("x", -LABEL_SIZE / 2)
+      .attr("y", 10);
 
     this.y = d3.scaleLinear()
       .domain([0, MAX])
       .range([this.height, 0]);
 
     this.yAxis = d3.axisLeft(this.y)
-      .tickFormat(d3.format(".0%"));;
+      .tickFormat(d3.format(".0%"));
+    ;
     this.svg.append('g')
       .attr('class', 'y-axis')
       .call(this.yAxis);
@@ -92,7 +110,7 @@ export class AppComponent implements OnInit {
     for (const p in this.playlists) {
       const pp = this.playlists[p];
 
-      const xCoord = (d, i) => x(TIERS[i]) + x.step() / 2;
+      const xCoord = (d, i) => x(this.tiers[i]) + x.step() / 2;
       const yCoord = d => this.y(d);
 
       pp.line = d3.line()
