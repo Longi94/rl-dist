@@ -115,6 +115,9 @@ export class AppComponent implements OnInit {
       .attr('class', 'y-axis')
       .call(this.yAxis);
 
+    this.svg.select(".y-axis").selectAll("text")
+      .attr('font-size', 16);
+
     for (const p in this.playlists) {
       const pp = this.playlists[p];
 
