@@ -1,18 +1,28 @@
-<div class="chart-and-playlists">
-  <div id="chart"></div>
-  <div class="playlist-container">
-    <div *ngFor="let p of playlistsNames" class="legend-label">
-      <div class="legend-color" [ngStyle]="{'background-color': playlists[p].color}"></div>
-      <mat-checkbox [(ngModel)]="playlists[p].visible" (ngModelChange)="update()">{{p}}</mat-checkbox>
+<div class="container">
+  <div class="row">
+    <div class="col-md-10">
+      <div id="chart" #chartDiv></div>
+    </div>
+    <div class="col-md-2">
+      <div class="playlist-container">
+        <div *ngFor="let p of playlistsNames" class="legend-label">
+          <div class="legend-color" [ngStyle]="{'background-color': playlists[p].color}"></div>
+          <mat-checkbox [(ngModel)]="playlists[p].visible" (ngModelChange)="update()">{{p}}</mat-checkbox>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-<div class="season-control-container">
-  <button mat-icon-button (click)="previousSeason()">
-    <mat-icon>chevron_left</mat-icon>
-  </button>
-  <span>Season {{selectedSeason}}</span>
-  <button mat-icon-button (click)="nextSeason()">
-    <mat-icon>chevron_right</mat-icon>
-  </button>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="season-control-container">
+        <button mat-icon-button (click)="previousSeason()">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span>Season {{selectedSeason}}</span>
+        <button mat-icon-button (click)="nextSeason()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

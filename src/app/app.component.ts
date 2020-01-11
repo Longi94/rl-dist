@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { AppService, Distributions } from './app.service';
 import * as d3 from 'd3';
 
 const MAX = 0.16;
-const LABEL_SIZE = 30;
+const LABEL_SIZE = 40;
+const MARGIN = {top: 10, right: 30, bottom: 50, left: 60};
 
 class PlaylistPlot {
   visible: boolean;
@@ -19,6 +20,9 @@ class PlaylistPlot {
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
+
+  @ViewChild('chartDiv', {static: true})
+  chartDiv: ElementRef;
 
   dists: Distributions;
   playlists: { [p: string]: PlaylistPlot } = {
@@ -36,11 +40,14 @@ export class AppComponent implements OnInit {
   seasonsBounds: number[];
   selectedSeason: number;
 
+  root: d3.Selection;
   svg: d3.Selection;
   width: number;
   height: number;
-  y: d3.scale;
-  yAxis: d3.axis;
+  y: d3.scaleLinear;
+  x: d3.scaleBand;
+  yAxis: d3.axisLeft;
+  xAxis: d3.axisBottom;
 
   tiers: string[] = [];
 
@@ -64,26 +71,27 @@ export class AppComponent implements OnInit {
   }
 
   private initD3() {
-    const margin = {top: 10, right: 30, bottom: 30, left: 60};
-    this.width = 600 - margin.left - margin.right;
-    this.height = 400 - margin.top - margin.bottom;
+    this.width = this.chartDiv.nativeElement.clientWidth - MARGIN.left - MARGIN.right;
+    this.height = (this.chartDiv.nativeElement.clientWidth / 3 * 2) - MARGIN.top - MARGIN.bottom;
 
-    this.svg = d3.select('#chart')
+    this.root = d3.select('#chart')
       .append('svg')
-      .attr('width', this.width + margin.left + margin.right)
-      .attr('height', this.height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform',
-        'translate(' + margin.left + ',' + margin.top + ')');
+      .attr('width', this.width + MARGIN.left + MARGIN.right)
+      .attr('height', this.height + MARGIN.top + MARGIN.bottom);
 
-    const x = d3.scaleBand()
+    this.svg = this.root.append('g')
+      .attr('transform', 'translate(' + MARGIN.left + ',' + MARGIN.top + ')');
+
+    this.x = d3.scaleBand()
       .domain(this.tiers)
       .range([0, this.width]);
+
+    this.xAxis = d3.axisBottom(this.x);
 
     this.svg.append('g')
       .attr("class", "x-axis")
       .attr('transform', 'translate(0,' + this.height + ')')
-      .call(d3.axisBottom(x));
+      .call(this.xAxis);
 
     this.svg.select(".x-axis").selectAll("text").remove();
 
@@ -102,7 +110,7 @@ export class AppComponent implements OnInit {
 
     this.yAxis = d3.axisLeft(this.y)
       .tickFormat(d3.format(".0%"));
-    ;
+
     this.svg.append('g')
       .attr('class', 'y-axis')
       .call(this.yAxis);
@@ -110,7 +118,7 @@ export class AppComponent implements OnInit {
     for (const p in this.playlists) {
       const pp = this.playlists[p];
 
-      const xCoord = (d, i) => x(this.tiers[i]) + x.step() / 2;
+      const xCoord = (d, i) => this.x(this.tiers[i]) + this.x.step() / 2;
       const yCoord = d => this.y(d);
 
       pp.line = d3.line()
@@ -127,6 +135,8 @@ export class AppComponent implements OnInit {
         .attr('stroke-width', 1)
         .attr('d', pp.line);
     }
+
+    window.addEventListener("resize", () => this.update());
   }
 
   previousSeason() {
@@ -140,14 +150,30 @@ export class AppComponent implements OnInit {
   }
 
   update(changeValues: boolean = false) {
-    this.y.domain([0, MAX])
-      .range([this.height, 0]);
+    this.width = this.chartDiv.nativeElement.clientWidth - MARGIN.left - MARGIN.right;
+    this.height = (this.chartDiv.nativeElement.clientWidth / 3 * 2) - MARGIN.top - MARGIN.bottom;
 
     const d = changeValues ? 1000 : 250;
+
+    this.root.transition()
+      .duration(d)
+      .attr('width', this.width + MARGIN.left + MARGIN.right)
+      .attr('height', this.height + MARGIN.top + MARGIN.bottom);
+
+    this.x.domain(this.tiers)
+      .range([0, this.width]);
+
+    this.y.domain([0, MAX])
+      .range([this.height, 0]);
 
     this.svg.selectAll('.y-axis').transition()
       .duration(d)
       .call(this.yAxis);
+
+    this.svg.selectAll('.x-axis').transition()
+      .duration(d)
+      .attr('transform', 'translate(0,' + this.height + ')')
+      .call(this.xAxis);
 
     for (const p in this.playlists) {
       const pp = this.playlists[p];
