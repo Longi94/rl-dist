@@ -10,6 +10,7 @@ for csv_file in os.listdir('distributions'):
 
     df = pd.read_csv(csv_file, header=0)
     df = df.drop('Rank Tier', axis=1)
+    df = df / 100
 
     output[season] = df.to_dict(orient='list')
 
