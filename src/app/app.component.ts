@@ -1,5 +1,5 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { AppService, Distributions } from './app.service';
+import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {AppService, Distributions} from './app.service';
 import * as d3 from 'd3';
 
 const MAX = 0.16;
@@ -12,6 +12,7 @@ class PlaylistPlot {
 
   line?: d3.line;
   lineGraph?: d3.Selection;
+  focus?: d3.Selection;
 }
 
 @Component({
@@ -33,7 +34,7 @@ export class AppComponent implements OnInit {
     'Rumble': {visible: false, color: '#607D8B'},
     'Dropshot': {visible: false, color: '#9C27B0'},
     'Hoops': {visible: false, color: '#00BCD4'},
-    'Snow Day': {visible: false, color: '#FFEB3B'},
+    'Snow Day': {visible: false, color: '#FFEB3B'}
   };
   playlistsNames = Object.keys(this.playlists);
 
@@ -82,6 +83,7 @@ export class AppComponent implements OnInit {
     this.svg = this.root.append('g')
       .attr('transform', 'translate(' + MARGIN.left + ',' + MARGIN.top + ')');
 
+
     this.x = d3.scaleBand()
       .domain(this.tiers)
       .range([0, this.width]);
@@ -89,33 +91,33 @@ export class AppComponent implements OnInit {
     this.xAxis = d3.axisBottom(this.x);
 
     this.svg.append('g')
-      .attr("class", "x-axis")
+      .attr('class', 'x-axis')
       .attr('transform', 'translate(0,' + this.height + ')')
       .call(this.xAxis);
 
-    this.svg.select(".x-axis").selectAll("text").remove();
+    this.svg.select('.x-axis').selectAll('text').remove();
 
-    const ticks = this.svg.select(".x-axis").selectAll(".tick")
+    const ticks = this.svg.select('.x-axis').selectAll('.tick')
       .data(this.tiers)
-      .append("svg:image")
-      .attr("xlink:href", d => d)
-      .attr("width", LABEL_SIZE)
-      .attr("height", LABEL_SIZE)
-      .attr("x", -LABEL_SIZE / 2)
-      .attr("y", 10);
+      .append('svg:image')
+      .attr('xlink:href', d => d)
+      .attr('width', LABEL_SIZE)
+      .attr('height', LABEL_SIZE)
+      .attr('x', -LABEL_SIZE / 2)
+      .attr('y', 10);
 
     this.y = d3.scaleLinear()
       .domain([0, MAX])
       .range([this.height, 0]);
 
     this.yAxis = d3.axisLeft(this.y)
-      .tickFormat(d3.format(".0%"));
+      .tickFormat(d3.format('.0%'));
 
     this.svg.append('g')
       .attr('class', 'y-axis')
       .call(this.yAxis);
 
-    this.svg.select(".y-axis").selectAll("text")
+    this.svg.select('.y-axis').selectAll('text')
       .attr('font-size', 16);
 
     for (const p in this.playlists) {
@@ -137,9 +139,28 @@ export class AppComponent implements OnInit {
         .attr('stroke', pp.color)
         .attr('stroke-width', 1.5)
         .attr('d', pp.line);
+
+      pp.focus = this.svg.append('circle')
+        .style('fill', pp.color)
+        .attr('stroke', pp.color)
+        .attr('r', 3)
+        .style('opacity', 0);
     }
 
-    window.addEventListener("resize", () => this.update());
+    // Create a rect on top of the svg area: this rectangle recovers mouse position
+    this.svg
+      .append('rect')
+      .style('fill', 'none')
+      .style('pointer-events', 'all')
+      .attr('width', this.width + MARGIN.left + MARGIN.right)
+      .attr('height', this.height + MARGIN.top + MARGIN.bottom)
+      .on('mouseover', () => this.mouseover())
+      .on('mousemove', (asdf) => {
+        this.mousemove();
+      })
+      .on('mouseout', () => this.mouseout());
+
+    window.addEventListener('resize', () => this.update());
   }
 
   previousSeason() {
@@ -198,4 +219,34 @@ export class AppComponent implements OnInit {
     }
   }
 
+  mouseover() {
+    for (const p in this.playlists) {
+      const pp = this.playlists[p];
+      pp.focus.style('opacity', pp.visible ? 1 : 0);
+    }
+  }
+
+  mousemove() {
+    const x = d3.mouse(this.svg.node())[0];
+
+    const step = this.x.step();
+    const index = Math.round((x - step / 2) / step);
+    const val = this.x.domain()[index];
+
+    if (val == undefined) {
+      return;
+    }
+
+    for (const p in this.playlists) {
+      this.playlists[p].focus
+        .attr("cx", this.x(val) + step / 2)
+        .attr("cy", this.y(this.dists[this.selectedSeason][p][index]));
+    }
+  }
+
+  mouseout() {
+    for (const p in this.playlists) {
+      this.playlists[p].focus.style('opacity', 0);
+    }
+  }
 }
