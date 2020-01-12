@@ -26,14 +26,14 @@ export class AppComponent implements OnInit {
 
   dists: Distributions;
   playlists: { [p: string]: PlaylistPlot } = {
-    'Standard': {visible: true, color: '#7293CB'},
-    'Doubles': {visible: true, color: '#E1974C'},
-    'Solo Duel': {visible: true, color: '#84BA5B'},
-    'Solo Standard': {visible: true, color: '#D35E60'},
-    'Rumble': {visible: false, color: '#808585'},
-    'Dropshot': {visible: false, color: '#9067A7'},
-    'Hoops': {visible: false, color: '#AB6857'},
-    'Snow Day': {visible: false, color: '#CCC210'},
+    'Standard': {visible: true, color: '#2196F3'},
+    'Doubles': {visible: true, color: '#FF9800'},
+    'Solo Duel': {visible: true, color: '#4CAF50'},
+    'Solo Standard': {visible: true, color: '#F44336'},
+    'Rumble': {visible: false, color: '#607D8B'},
+    'Dropshot': {visible: false, color: '#9C27B0'},
+    'Hoops': {visible: false, color: '#00BCD4'},
+    'Snow Day': {visible: false, color: '#FFEB3B'},
   };
   playlistsNames = Object.keys(this.playlists);
 
