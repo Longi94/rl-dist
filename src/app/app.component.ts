@@ -183,9 +183,7 @@ export class AppComponent implements OnInit {
       .attr('width', this.width + MARGIN.left + MARGIN.right)
       .attr('height', this.height + MARGIN.top + MARGIN.bottom)
       .on('mouseover', () => this.mouseover())
-      .on('mousemove', (asdf) => {
-        this.mousemove();
-      })
+      .on('mousemove', () => this.mousemove())
       .on('mouseout', () => this.mouseout());
 
     window.addEventListener('resize', () => this.update());
