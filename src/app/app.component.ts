@@ -45,10 +45,11 @@ export class AppComponent implements OnInit {
   svg: d3.Selection;
   width: number;
   height: number;
-  y: d3.scaleLinear;
-  x: d3.scaleBand;
-  yAxis: d3.axisLeft;
-  xAxis: d3.axisBottom;
+  y: d3.Scale;
+  x: d3.Scale;
+  yAxis: d3.Axis;
+  xAxis: d3.Axis;
+  focusText: d3.Selection;
 
   tiers: string[] = [];
 
@@ -147,6 +148,15 @@ export class AppComponent implements OnInit {
         .style('opacity', 0);
     }
 
+    this.focusText = this.svg
+      .append('g')
+      .append('text')
+      .style('opacity', 0)
+      .attr('fill', 'white')
+      .attr('font-size', 16)
+      .attr('text-anchor', 'left')
+      .attr('alignment-baseline', 'middle');
+
     // Create a rect on top of the svg area: this rectangle recovers mouse position
     this.svg
       .append('rect')
@@ -220,6 +230,7 @@ export class AppComponent implements OnInit {
   }
 
   mouseover() {
+    this.focusText.style('opacity', 1);
     for (const p in this.playlists) {
       const pp = this.playlists[p];
       const season = this.dists[this.selectedSeason][p];
@@ -242,6 +253,8 @@ export class AppComponent implements OnInit {
 
     let closest: string = undefined;
     let closestD = -1;
+    let closestVal = undefined;
+    let closestY = 0;
 
     for (const p in this.playlists) {
       const pp = this.playlists[p];
@@ -261,9 +274,15 @@ export class AppComponent implements OnInit {
         if (closest == undefined || dy < closestD) {
           closest = p;
           closestD = dy;
+          closestVal = season[index];
+          closestY = vy;
         }
       }
     }
+
+    this.focusText.html(`${(closestVal * 100).toFixed(2)}%`)
+      .attr('x', this.x(val) + step / 2 + 10)
+      .attr('y', closestY);
 
     for (const p in this.playlists) {
       const pp = this.playlists[p];
@@ -280,6 +299,7 @@ export class AppComponent implements OnInit {
   }
 
   mouseout() {
+    this.focusText.style('opacity', 0);
     for (const p in this.playlists) {
       const pp = this.playlists[p];
       const season = this.dists[this.selectedSeason][p];
