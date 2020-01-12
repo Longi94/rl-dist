@@ -10,6 +10,7 @@
           <mat-checkbox [(ngModel)]="playlists[p].visible" (ngModelChange)="update()">{{p}}</mat-checkbox>
         </div>
       </div>
+      <mat-checkbox (change)="update(true)" [(ngModel)]="showPercentiles">Percentiles</mat-checkbox>
     </div>
   </div>
   <div class="row">

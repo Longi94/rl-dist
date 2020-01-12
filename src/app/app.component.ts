@@ -1,5 +1,5 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {AppService, Distributions} from './app.service';
+import {AppService, Distributions, RankDistributions} from './app.service';
 import * as d3 from 'd3';
 
 const MAX = 0.16;
@@ -26,6 +26,7 @@ export class AppComponent implements OnInit {
   chartDiv: ElementRef;
 
   dists: Distributions;
+  percentiles: Distributions = {};
   playlists: { [p: string]: PlaylistPlot } = {
     'Standard': {visible: true, color: '#2196F3'},
     'Doubles': {visible: true, color: '#FF9800'},
@@ -52,6 +53,7 @@ export class AppComponent implements OnInit {
   focusText: d3.Selection;
 
   tiers: string[] = [];
+  showPercentiles = false;
 
   constructor(private appService: AppService) {
     for (let i = 1; i <= 19; i++) {
@@ -67,6 +69,22 @@ export class AppComponent implements OnInit {
       seasons.sort((a, b) => a - b);
       this.seasonsBounds = [seasons[0], seasons[seasons.length - 1]];
       this.selectedSeason = this.seasonsBounds[1];
+
+      for (const s of seasons) {
+        const seasonPercentiles: RankDistributions = {};
+        for (const p in this.dists[s]) {
+          const percentiles = [];
+          let total = 0;
+
+          for (let i = this.tiers.length - 1; i >= 0; i--) {
+            total += this.dists[s][p][i];
+            percentiles.unshift(total);
+          }
+
+          seasonPercentiles[p] = percentiles;
+        }
+        this.percentiles[s] = seasonPercentiles;
+      }
 
       this.initD3();
     });
@@ -197,22 +215,26 @@ export class AppComponent implements OnInit {
     this.x.domain(this.tiers)
       .range([0, this.width]);
 
-    this.y.domain([0, MAX])
+    this.y.domain([0, this.showPercentiles ? 1 : MAX])
       .range([this.height, 0]);
 
     this.svg.selectAll('.y-axis').transition()
       .duration(d)
       .call(this.yAxis);
+    this.svg.select('.y-axis').selectAll('text')
+      .attr('font-size', 16);
 
     this.svg.selectAll('.x-axis').transition()
       .duration(d)
       .attr('transform', 'translate(0,' + this.height + ')')
       .call(this.xAxis);
 
+    const data = this.showPercentiles ? this.percentiles : this.dists;
+
     for (const p in this.playlists) {
       const pp = this.playlists[p];
 
-      const season = this.dists[this.selectedSeason][p];
+      const season = data[this.selectedSeason][p];
 
       let line = pp.lineGraph;
 
@@ -230,10 +252,11 @@ export class AppComponent implements OnInit {
   }
 
   mouseover() {
+    const data = this.showPercentiles ? this.percentiles : this.dists;
     this.focusText.style('opacity', 1);
     for (const p in this.playlists) {
       const pp = this.playlists[p];
-      const season = this.dists[this.selectedSeason][p];
+      const season = data[this.selectedSeason][p];
       pp.focus.style('opacity', season != undefined && pp.visible ? 1 : 0);
     }
   }
@@ -256,9 +279,10 @@ export class AppComponent implements OnInit {
     let closestVal = undefined;
     let closestY = 0;
 
+    const data = this.showPercentiles ? this.percentiles : this.dists;
     for (const p in this.playlists) {
       const pp = this.playlists[p];
-      const season = this.dists[this.selectedSeason][p];
+      const season = data[this.selectedSeason][p];
 
       if (season == undefined) {
         continue;
@@ -286,7 +310,8 @@ export class AppComponent implements OnInit {
 
     for (const p in this.playlists) {
       const pp = this.playlists[p];
-      const season = this.dists[this.selectedSeason][p];
+      const data = this.showPercentiles ? this.percentiles : this.dists;
+      const season = data[this.selectedSeason][p];
 
       if (season == undefined || !pp.visible) {
         pp.lineGraph.attr('opacity', 0);
