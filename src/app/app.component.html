@@ -1,20 +1,9 @@
 <div class="container">
   <div class="row">
-    <div class="col-md-10">
+    <div class="col-md-9 col-lg-10">
       <div id="chart" #chartDiv></div>
     </div>
-    <div class="col-md-2">
-      <div class="playlist-container">
-        <div *ngFor="let p of playlistsNames" class="legend-label">
-          <div class="legend-color" [ngStyle]="{'background-color': playlists[p].color}"></div>
-          <mat-checkbox [(ngModel)]="playlists[p].visible" (ngModelChange)="update()">{{p}}</mat-checkbox>
-        </div>
-      </div>
-      <mat-checkbox (change)="update(true)" [(ngModel)]="showPercentiles">Percentiles</mat-checkbox>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-12">
+    <mat-card class="col-md-3 col-lg-2">
       <div class="season-control-container">
         <button mat-icon-button (click)="previousSeason()">
           <mat-icon>chevron_left</mat-icon>
@@ -24,6 +13,17 @@
           <mat-icon>chevron_right</mat-icon>
         </button>
       </div>
-    </div>
+      <mat-divider></mat-divider>
+      <div class="percentile-checkbox">
+        <mat-checkbox (change)="update(true)" [(ngModel)]="showPercentiles">Percentiles</mat-checkbox>
+      </div>
+      <mat-divider></mat-divider>
+      <div class="playlist-container">
+        <div *ngFor="let p of playlistsNames" class="legend-label">
+          <div class="legend-color" [ngStyle]="{'background-color': playlists[p].color}"></div>
+          <mat-checkbox [(ngModel)]="playlists[p].visible" (ngModelChange)="update()">{{p}}</mat-checkbox>
+        </div>
+      </div>
+    </mat-card>
   </div>
 </div>

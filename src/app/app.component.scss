@@ -4,7 +4,20 @@
   flex-flow: row;
 }
 
+.season-control-container {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.percentile-checkbox {
+  padding: 12px 0;
+}
+
 .playlist-container {
+  margin-top: 12px;
   display: flex;
   flex-flow: column;
 }

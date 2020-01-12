@@ -9,6 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
+import {MatCardModule} from '@angular/material/card';
+import {MatDividerModule} from '@angular/material/divider';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,9 @@ import { MatInputModule } from '@angular/material/input';
     FormsModule,
     BrowserAnimationsModule,
     MatButtonModule,
+    MatCardModule,
     MatCheckboxModule,
+    MatDividerModule,
     MatIconModule,
     MatInputModule
   ],
