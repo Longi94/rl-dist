@@ -222,12 +222,15 @@ export class AppComponent implements OnInit {
   mouseover() {
     for (const p in this.playlists) {
       const pp = this.playlists[p];
-      pp.focus.style('opacity', pp.visible ? 1 : 0);
+      const season = this.dists[this.selectedSeason][p];
+      pp.focus.style('opacity', season != undefined && pp.visible ? 1 : 0);
     }
   }
 
   mousemove() {
-    const x = d3.mouse(this.svg.node())[0];
+    const coords = d3.mouse(this.svg.node());
+    const x = coords[0];
+    const y = coords[1];
 
     const step = this.x.step();
     const index = Math.round((x - step / 2) / step);
@@ -237,16 +240,51 @@ export class AppComponent implements OnInit {
       return;
     }
 
+    let closest: string = undefined;
+    let closestD = -1;
+
     for (const p in this.playlists) {
-      this.playlists[p].focus
-        .attr("cx", this.x(val) + step / 2)
-        .attr("cy", this.y(this.dists[this.selectedSeason][p][index]));
+      const pp = this.playlists[p];
+      const season = this.dists[this.selectedSeason][p];
+
+      if (season == undefined) {
+        continue;
+      }
+
+      const vy = this.y(season[index]);
+      pp.focus
+        .attr('cx', this.x(val) + step / 2)
+        .attr('cy', vy);
+
+      if (pp.visible) {
+        const dy = Math.abs(vy - y);
+        if (closest == undefined || dy < closestD) {
+          closest = p;
+          closestD = dy;
+        }
+      }
+    }
+
+    for (const p in this.playlists) {
+      const pp = this.playlists[p];
+      const season = this.dists[this.selectedSeason][p];
+
+      if (season == undefined || !pp.visible) {
+        pp.lineGraph.attr('opacity', 0);
+      } else if (p === closest) {
+        pp.lineGraph.attr('opacity', 1);
+      } else {
+        pp.lineGraph.attr('opacity', 0.5);
+      }
     }
   }
 
   mouseout() {
     for (const p in this.playlists) {
-      this.playlists[p].focus.style('opacity', 0);
+      const pp = this.playlists[p];
+      const season = this.dists[this.selectedSeason][p];
+      pp.focus.style('opacity', 0);
+      pp.lineGraph.attr('opacity', season != undefined && pp.visible ? 1 : 0);
     }
   }
 }
